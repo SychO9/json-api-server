@@ -27,7 +27,9 @@ abstract class EloquentBuffer
             return;
         }
 
-        Collection::make($models)->load([
+        $collection = $model->newCollection($models);
+
+        $collection->load([
             $relationName => function ($relation) use (
                 $model,
                 $relationName,
@@ -67,6 +69,23 @@ abstract class EloquentBuffer
                 }
             },
         ]);
+
+        if ($relationship->inverse) {
+            $inverse = $relationship->inverse;
+
+            $collection->each(function (Model $model) use ($relationName, $inverse) {
+                /** @var Model|Collection $relatedModels */
+                if ($relatedModels = $model->getRelation($relationName)) {
+                    $relatedModels = $relatedModels instanceof Collection ? $relatedModels : [$relatedModels];
+
+                    foreach ($relatedModels as $related) {
+                        if ($related->isRelation($inverse) && ! $related->relationLoaded($inverse)) {
+                            $related->setRelation($inverse, $model);
+                        }
+                    }
+                }
+            });
+        }
 
         static::$buffer[get_class($model)][$relationName] = [];
     }

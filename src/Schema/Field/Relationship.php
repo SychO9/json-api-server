@@ -15,6 +15,7 @@ abstract class Relationship extends Field
     public array $collections;
     public bool $includable = false;
     public bool $linkage = false;
+    public ?string $inverse = null;
 
     /**
      * Set the collection(s) that this relationship is to.
@@ -50,6 +51,16 @@ abstract class Relationship extends Field
     public function withLinkage(): static
     {
         $this->linkage = true;
+
+        return $this;
+    }
+
+    /**
+     * Optionally set the inverse relationship name.
+     */
+    public function inverse(string $inverse): static
+    {
+        $this->inverse = $inverse;
 
         return $this;
     }
